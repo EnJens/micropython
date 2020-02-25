@@ -59,6 +59,10 @@ INC += -Iboards/$(BOARD)
 ifeq ($(CROSS), 1)
 DFU = $(TOP)/tools/dfu.py
 PYDFU = $(TOP)/tools/pydfu.py
+CFLAGS_COMMON = \
+	-D$(EFM_DEV) \
+    -D$(EFM_FAMILY) \
+
 CFLAGS_CORTEX_M4 = \
 	-mthumb \
 	-mtune=cortex-m4 \
@@ -66,8 +70,20 @@ CFLAGS_CORTEX_M4 = \
 	-msoft-float \
 	-fsingle-precision-constant \
 	-Wdouble-promotion \
-	-D$(EFM_DEV) \
 	-falign-functions=2 \
+    $(CFLAGS_COMMON)
+
+CFLAGS_CORTEX_M33 = \
+	-mthumb \
+	-mcpu=cortex-m33 \
+    -march=armv8-m.main+dsp \
+    -mcmse \
+    -mfpu=fpv5-sp-d16 \
+    -mfloat-abi=hard \
+	-D$(EFM_DEV) \
+    -D$(EFM_FAMILY) \
+	-falign-functions=2 \
+    $(CFLAGS_COMMON)
 
 LIBM	:= $(shell $(CROSS_COMPILE)gcc $(CFLAGS_$(MCU_SERIES)) --print-file-name=libm.a)
 LIBGCC	:= $(shell $(CROSS_COMPILE)gcc $(CFLAGS_$(MCU_SERIES)) --print-libgcc)

@@ -57,18 +57,24 @@ int main(int argc, char **argv)
 	// must be called immediately in main() to handle errata
 	CHIP_Init();
 
+    #if 0
 	// mbed-os does this?
 	EMU_DCDCInit_TypeDef dcdcInit = EMU_DCDCINIT_DEFAULT;
 	EMU_DCDCInit(&dcdcInit);
-
+    #endif
 	// init the 38.4 MHz high frequency clock for the radio
 	CMU_HFXOInit_TypeDef hfxoInit = CMU_HFXOINIT_DEFAULT;
 	CMU_HFXOInit(&hfxoInit);
 
 	// Switch HFCLK to HFXO and disable HFRCO
+    #if defined(CMU_HF_CLK_BRANCH)
 	CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO);
+    #else
+	CMU_ClockSelectSet(cmuClock_SYSCLK, cmuSelect_HFXO);
+    #endif
 	//SystemHFXOClockSet(EFR32_HFXO_FREQ); //should already be at 38.4 MHz
 	//CMU_OscillatorEnable(cmuOsc_HFRCO, false, false);
+    #if 0
 	CMU_ClockEnable(cmuClock_CORELE, true);
 
 	/* Turn RTCC clock gate back on to keep RTC time correct */
@@ -80,6 +86,7 @@ int main(int argc, char **argv)
 	/* Enable clock for GPIO module and TIMER1 for PWM */
 	CMU_ClockEnable(cmuClock_GPIO, true);
 	CMU_ClockEnable(cmuClock_TIMER1, true );
+    #endif
 
 	/* TODO: figure out if we can turn off clocks to save power */
 

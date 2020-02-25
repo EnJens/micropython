@@ -20,7 +20,7 @@
 #include "board_pins.h"
 
 // this definition is insufficient; there are places where usart1 is used
-#define USART USART1
+#define MYUSART USART1
 #define USART_CLOCK  cmuClock_USART1
 
 #define CONFIG_RX_IRQ
@@ -75,7 +75,7 @@ uintptr_t mp_hal_stdio_poll(uintptr_t poll_flags)
 	if (uart_rx_head != uart_rx_tail)
 		return MP_STREAM_POLL_RD;
 #else
-	if (USART->STATUS & USART_STATUS_RXDATAV)
+	if (MYUSART->STATUS & USART_STATUS_RXDATAV)
 		return MP_STREAM_POLL_RD;
 #endif
 	return 0;
@@ -94,7 +94,7 @@ int mp_hal_stdin_rx_chr(void)
 	uart_rx_tail = (tail + 1) & UART_RX_MASK;
 #else
 	// spin on the incoming register
-	c = USART_Rx(USART);
+	c = USART_Rx(MYUSART);
 #endif
 	return c;
 }
@@ -127,7 +127,7 @@ void USART1_TX_IRQHandler(void)
 	}
 
 	const uint8_t c = uart_tx_buf[tail];
-	USART->TXDATA = (uint32_t) c;
+	MYUSART->TXDATA = (uint32_t) c;
 
 	uart_tx_tail = tail_next;
 }
@@ -154,13 +154,13 @@ static void uart_putc(uint8_t c, bool blocking)
 		break;
 	} while(blocking);
 #else
-	while (!(USART->STATUS & USART_STATUS_TXBL))
+	while (!(MYUSART->STATUS & USART_STATUS_TXBL))
 	{
 		if (!blocking)
 			return;
 	}
 
-	USART_Tx(USART, c);
+	USART_Tx(MYUSART, c);
 #endif
 }
 
@@ -202,18 +202,18 @@ void mp_hal_stdout_init(void)
     CMU_ClockEnable(cmuClock_GPIO, true);
 
     static const USART_InitAsync_TypeDef config = USART_INITASYNC_DEFAULT;
-    USART_InitAsync(USART, &config);
+    USART_InitAsync(MYUSART, &config);
 
   GPIO_PinModeSet(USART_TX_PORT, USART_TX_PIN, gpioModePushPull, 1);
   GPIO_PinModeSet(USART_RX_PORT, USART_RX_PIN, gpioModeInput, 1);
 
   // Configure route
-  USART->ROUTELOC0  = USART_TX_LOCATION << _USART_ROUTELOC0_TXLOC_SHIFT;
-  USART->ROUTELOC0 |= USART_RX_LOCATION << _USART_ROUTELOC0_RXLOC_SHIFT;
-  USART->ROUTEPEN   = USART_ROUTEPEN_TXPEN | USART_ROUTEPEN_RXPEN;
+  MYUSART->ROUTELOC0  = USART_TX_LOCATION << _USART_ROUTELOC0_TXLOC_SHIFT;
+  MYUSART->ROUTELOC0 |= USART_RX_LOCATION << _USART_ROUTELOC0_RXLOC_SHIFT;
+  MYUSART->ROUTEPEN   = USART_ROUTEPEN_TXPEN | USART_ROUTEPEN_RXPEN;
 
   // Enable TX/RX
-  USART->CMD = USART_CMD_RXEN
+  MYUSART->CMD = USART_CMD_RXEN
                 | USART_CMD_TXEN;
 
 #ifdef CONFIG_RX_IRQ
